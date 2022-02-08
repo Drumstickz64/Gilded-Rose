@@ -61,7 +61,10 @@ impl GildedRose {
                 continue;
             }
 
-            let new_quality = item.quality - if item.sell_in == 0 { 2 } else { 1 };
+            let is_conjured = item.name.starts_with("Conjured");
+            let regular_quality_loss_amount = if item.sell_in == 0 { 2 } else { 1 };
+            let new_quality =
+                item.quality - regular_quality_loss_amount * if is_conjured { 2 } else { 1 };
             item.quality = i32::max(new_quality, MIN_ITEM_QUALITY);
             item.sell_in -= 1;
         }
@@ -70,8 +73,6 @@ impl GildedRose {
 
 #[cfg(test)]
 mod tests {
-    use crate::gildedrose::MAX_ITEM_QUALITY;
-
     use super::*;
 
     #[test]
@@ -104,6 +105,7 @@ mod tests {
 
         rose.update_quality();
         assert_eq!(quality + 1, rose.items[0].quality);
+        assert_eq!(sell_in - 1, rose.items[0].sell_in);
 
         rose.update_quality();
         assert_eq!(quality + 3, rose.items[0].quality);
@@ -140,9 +142,30 @@ mod tests {
         let mut rose = GildedRose::new(items);
 
         rose.update_quality();
+        assert_eq!(sell_in_10_or_less - 1, rose.items[0].sell_in);
         assert_eq!(quality + 2, rose.items[0].quality);
         assert_eq!(quality + 3, rose.items[1].quality);
         assert_eq!(0, rose.items[2].quality);
         assert_eq!(quality + 1, rose.items[3].quality);
+    }
+
+    #[test]
+    pub fn conjured_item() {
+        let name = "Conjured Mana Cake";
+        let sell_in = 1;
+        let quality = 7;
+        let items = vec![Item::new(name, sell_in, quality)];
+        let mut rose = GildedRose::new(items);
+        rose.update_quality();
+
+        assert_eq!(name, rose.items[0].name);
+        assert_eq!(sell_in - 1, rose.items[0].sell_in);
+        assert_eq!(quality - 2, rose.items[0].quality);
+
+        rose.update_quality();
+        assert_eq!(quality - 6, rose.items[0].quality);
+
+        rose.update_quality();
+        assert!(rose.items[0].quality >= MIN_ITEM_QUALITY);
     }
 }
