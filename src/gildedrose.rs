@@ -1,4 +1,8 @@
 use std::fmt::{self, Display};
+
+const MIN_ITEM_QUALITY: i32 = 0;
+const MAX_ITEM_QUALITY: i32 = 50;
+
 pub struct Item {
     pub name: String,
     pub sell_in: i32,
@@ -32,8 +36,16 @@ impl GildedRose {
 
     pub fn update_quality(&mut self) {
         for item in self.items.iter_mut() {
+            let is_aged = item.name == "Aged Brie";
+            if is_aged {
+                let new_quality = item.quality + if item.sell_in == 0 { 2 } else { 1 };
+                item.quality = i32::min(new_quality, MAX_ITEM_QUALITY);
+                item.sell_in -= 1;
+                continue;
+            }
+
             let new_quality = item.quality - if item.sell_in == 0 { 2 } else { 1 };
-            item.quality = i32::max(new_quality, 0);
+            item.quality = i32::max(new_quality, MIN_ITEM_QUALITY);
             item.sell_in -= 1;
         }
 
@@ -92,7 +104,9 @@ impl GildedRose {
 
 #[cfg(test)]
 mod tests {
-    use super::{GildedRose, Item};
+    use crate::gildedrose::MAX_ITEM_QUALITY;
+
+    use super::*;
 
     #[test]
     pub fn regular_item() {
@@ -111,7 +125,7 @@ mod tests {
         assert_eq!(quality - 3, rose.items[0].quality);
 
         rose.update_quality();
-        assert!(rose.items[0].quality >= 0);
+        assert!(rose.items[0].quality >= MIN_ITEM_QUALITY);
     }
 
     #[test]
@@ -127,7 +141,7 @@ mod tests {
 
         rose.update_quality();
         assert_eq!(quality + 3, rose.items[0].quality);
-        assert!(rose.items[0].quality <= 50);
+        assert!(rose.items[0].quality <= MAX_ITEM_QUALITY);
     }
 
     #[test]
