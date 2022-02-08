@@ -36,6 +36,11 @@ impl GildedRose {
 
     pub fn update_quality(&mut self) {
         for item in self.items.iter_mut() {
+            let is_legendary = item.name == "Sulfuras, Hand of Ragnaros";
+            if is_legendary {
+                continue;
+            }
+
             let is_aged = item.name == "Aged Brie";
             if is_aged {
                 let new_quality = item.quality + if item.sell_in == 0 { 2 } else { 1 };
