@@ -41,6 +41,18 @@ impl GildedRose {
                 continue;
             }
 
+            let is_pass = item.name.starts_with("Backstage passes to");
+            if is_pass {
+                item.quality = match item.sell_in {
+                    6..=10 => item.quality + 2,
+                    1..=5 => item.quality + 3,
+                    0 => 0,
+                    _ => item.quality + 1,
+                };
+                item.sell_in -= 1;
+                continue;
+            }
+
             let is_aged = item.name == "Aged Brie";
             if is_aged {
                 let new_quality = item.quality + if item.sell_in == 0 { 2 } else { 1 };
@@ -168,11 +180,13 @@ mod tests {
         let sell_in_10_or_less = 10;
         let sell_in_5_or_less = 5;
         let sell_in_0 = 0;
+        let sell_in_more_than_10 = 20;
         let quality = 10;
         let items = vec![
             Item::new(name, sell_in_10_or_less, quality),
             Item::new(name, sell_in_5_or_less, quality),
             Item::new(name, sell_in_0, quality),
+            Item::new(name, sell_in_more_than_10, quality),
         ];
         let mut rose = GildedRose::new(items);
 
@@ -180,5 +194,6 @@ mod tests {
         assert_eq!(quality + 2, rose.items[0].quality);
         assert_eq!(quality + 3, rose.items[1].quality);
         assert_eq!(0, rose.items[2].quality);
+        assert_eq!(quality + 1, rose.items[3].quality);
     }
 }
